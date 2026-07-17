@@ -1,5 +1,10 @@
 # DocSite - Documentation Site Generator (Rust)
 
+<!-- FLEET-BADGES:BEGIN -->
+[![CI](https://github.com/tzervas/docsite/actions/workflows/fleet-ci.yml/badge.svg?branch=main)](https://github.com/tzervas/docsite/actions/workflows/fleet-ci.yml?query=branch%3Amain)
+[![Security](https://github.com/tzervas/docsite/actions/workflows/fleet-security.yml/badge.svg?branch=main)](https://github.com/tzervas/docsite/actions/workflows/fleet-security.yml?query=branch%3Amain)
+<!-- FLEET-BADGES:END -->
+
 A powerful documentation site generator written in Rust that creates beautiful, searchable, and maintainable documentation websites. Supports multiple documentation frameworks and provides automated deployment and hosting capabilities.
 
 ## Features
