@@ -1,0 +1,97 @@
+# Build the mdBook fleet docsite, fail on broken internal links or examples.
+# Explicit tier label (small) is required — jobs without a tier can land on
+# micro (0.25c/512m) and get OOM-killed.
+name: docs
+
+on:
+  push:
+    branches: [main, master, dev]
+  pull_request:
+    branches: [main, master, dev]
+  workflow_dispatch:
+
+# No schedule on this workflow. If a schedule is added later, do NOT enable
+# cancel-in-progress (scheduled jobs cancelled by the next tick silently never run).
+
+permissions:
+  contents: read
+
+jobs:
+  book:
+    name: mdbook + examples + cargo test
+    runs-on: [self-hosted, linux, x64, podman, small]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ensure mdbook toolchains
+        run: |
+          set -euo pipefail
+          export PATH="${HOME}/.cargo/bin:${PATH}"
+          if ! command -v mdbook >/dev/null 2>&1; then
+            cargo install mdbook --locked
+          fi
+          mdbook --version
+          jq --version
+          python3 --version
+          rustc --version
+          cargo --version
+
+      - name: Vendor sources
+        env:
+          # Optional org secret for private fleet-config. Absent → fixtures only.
+          FLEET_CONFIG_TOKEN: ${{ secrets.FLEET_CONFIG_READ_TOKEN }}
+          FLEET_CONFIG_REF: ${{ vars.FLEET_CONFIG_REF || 'dev' }}
+          CONFORMANCE_SPEC_PATH: ${{ vars.CONFORMANCE_SPEC_PATH || '' }}
+        run: |
+          set -euo pipefail
+          if [ -n "${FLEET_CONFIG_TOKEN:-}" ]; then
+            echo "FLEET_CONFIG_READ_TOKEN present — vendoring from private fleet-config"
+            ./scripts/vendor-sources.sh --from-fleet-config
+          else
+            echo "No FLEET_CONFIG_READ_TOKEN — vendoring public fixtures (no private content)"
+            ./scripts/vendor-sources.sh --from-fixtures
+          fi
+          cat src/vendor/SOURCE-PIN.md
+
+      - name: Internal link check
+        run: |
+          set -euo pipefail
+          python3 scripts/check-book-links.py src
+
+      - name: mdbook build
+        run: |
+          set -euo pipefail
+          export PATH="${HOME}/.cargo/bin:${PATH}"
+          mdbook build
+          if [ -f book/html/index.html ]; then
+            echo "rendered: book/html/index.html"
+          elif [ -f book/index.html ]; then
+            echo "rendered: book/index.html"
+          else
+            echo "rendered index.html missing" >&2
+            find book -maxdepth 3 -type f | head -40
+            exit 1
+          fi
+
+      - name: Runnable examples
+        run: |
+          set -euo pipefail
+          ./scripts/run-examples.sh
+
+      - name: cargo test (ruleset structure)
+        run: |
+          set -euo pipefail
+          cargo test
+
+      - name: State visibility constraint
+        run: |
+          set -euo pipefail
+          cat <<'EOF'
+          VISIBILITY (measured at authoring):
+            tzervas/docsite      = PUBLIC
+            tzervas/fleet-config = PRIVATE
+          This job does not publish HTML to GitHub Pages or any public host.
+          Private policy text is only present when FLEET_CONFIG_READ_TOKEN is set,
+          and even then it stays on the runner workspace (not uploaded as an artifact).
+          EOF

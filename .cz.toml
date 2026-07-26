@@ -1,0 +1,22 @@
+# Commitizen configuration (commitizen-tools).
+# Install (optional): pip install commitizen  OR  uv tool install commitizen
+# This file is valid without the CLI: agents and humans follow conventional commits.
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.1.0"
+tag_format = "v$version"
+version_scheme = "semver"
+major_version_zero = true
+
+# Keep these files lockstep on every release bump.
+version_files = [
+    "VERSION",
+    "Cargo.toml:version",
+]
+
+update_changelog_on_bump = true
+changelog_file = "CHANGELOG.md"
+changelog_incremental = true
+# cz bump: prefer `cz bump --increment PATCH|MINOR|MAJOR`.
+# Never cut or propose 1.x.x while major_version_zero = true.

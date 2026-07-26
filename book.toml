@@ -1,0 +1,46 @@
+# mdBook configuration for the fleet policy documentation site.
+#
+# Source content is *vendored at build time* from tzervas/fleet-config (private)
+# and optional local paths (e.g. CONFORMANCE-SPEC.md). Nothing under src/vendor/
+# is committed — that path is gitignored so a public clone cannot leak private
+# policy text.
+#
+# Build:
+#   ./scripts/build-book.sh                 # vendor (fixtures or fleet-config) + mdbook build
+#   ./scripts/build-book.sh --from-fixtures  # CI without private-repo token
+#   mdbook serve --open                     # after vendor step
+
+[book]
+title = "Fleet Policy Documentation"
+authors = ["tzervas fleet"]
+description = "Branch, release, testing, rulesets, and conformance — reader-first, pulled from fleet-config at build time"
+language = "en"
+src = "src"
+
+[build]
+build-dir = "book"
+create-missing = false
+
+[output.html]
+default-theme = "navy"
+preferred-dark-theme = "navy"
+git-repository-url = "https://github.com/tzervas/docsite"
+edit-url-template = "https://github.com/tzervas/docsite/edit/dev/{path}"
+site-url = "/docsite/"
+no-section-label = false
+# mdBook 0.5 uses Font Awesome 6 brands for github.
+# (icon key remains fa-github; FA brands set is selected by the theme.)
+
+[output.html.search]
+enable = true
+limit-results = 30
+teaser-word-count = 30
+use-boolean-and = true
+
+[output.html.fold]
+enable = true
+level = 1
+
+# Internal link checking is done by scripts/check-book-links.py (not
+# mdbook-linkcheck): mdbook-linkcheck 0.7.x is incompatible with mdBook 0.5's
+# RenderContext. CI fails the job when that script exits non-zero.
