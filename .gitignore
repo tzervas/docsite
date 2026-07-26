@@ -1,0 +1,21 @@
+# Build outputs
+/book/
+/target/
+
+# Vendored private sources — never commit (docsite is PUBLIC; fleet-config is PRIVATE)
+/src/vendor/
+
+# Editor / OS
+*~
+*.swp
+.DS_Store
+.idea/
+.vscode/
+
+# Local env / secrets
+.env
+.env.*
+
+# Scratch
+*.bak
+/tmp/

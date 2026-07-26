@@ -1,4 +1,7 @@
 # Fleet security lint/scan — self-hosted. Badge reflects honest job status on trunk.
+# Explicit tier label on every self-hosted job.
+# Scheduled workflows must NOT use cancel-in-progress (a later tick would cancel
+# an in-flight scan and report "cancelled" instead of a real result).
 name: fleet-security
 
 on:
@@ -10,9 +13,7 @@ on:
     - cron: "17 7 * * 1"
   workflow_dispatch:
 
-concurrency:
-  group: fleet-security-${{ github.ref }}
-  cancel-in-progress: true
+# No concurrency.cancel-in-progress: this workflow is scheduled.
 
 permissions:
   contents: read
@@ -20,7 +21,7 @@ permissions:
 jobs:
   gitleaks:
     name: gitleaks
-    runs-on: [self-hosted, linux, x64, podman]
+    runs-on: [self-hosted, linux, x64, podman, small]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -41,7 +42,7 @@ jobs:
 
   trivy-fs:
     name: trivy filesystem (vuln+secret+license)
-    runs-on: [self-hosted, linux, x64, podman]
+    runs-on: [self-hosted, linux, x64, podman, small]
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
